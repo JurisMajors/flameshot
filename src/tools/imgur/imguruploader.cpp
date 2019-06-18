@@ -22,6 +22,7 @@
 #include "src/widgets/imagelabel.h"
 #include "src/widgets/notificationwidget.h"
 #include "src/utils/confighandler.h"
+#include <iostream>
 #include <QApplication>
 #include <QClipboard>
 #include <QDesktopServices>
@@ -44,27 +45,29 @@
 ImgurUploader::ImgurUploader(const QPixmap &capture, QWidget *parent) :
     QWidget(parent), m_pixmap(capture)
 {
-    setWindowTitle(tr("Upload to Imgur"));
+    std::cout<<"uploading"<<std::endl;
+    // create tmp png file
+    char tmp_file[] = "/tmp/clip.XXXXXX.png";
+    mkstemps(tmp_file, 4);
+    bool success = capture.save(QString(tmp_file), 0, -1);
 
-    m_spinner = new LoadSpinner(this);
-    m_spinner->setColor(ConfigHandler().uiMainColorValue());
-    m_spinner->start();
+    if (success) {
+        // save tmp file to clipboard using xclip
+        char save[100 + sizeof(tmp_file)];
+        char curl[] = "\"file=@\"";
+        snprintf(save, sizeof(save),"curl -F%s%s http://0x0.st | xclip -sel c", curl, tmp_file);
+        std::cout<<save<<std::endl;
+        system(save);
 
-    m_infoLabel = new QLabel(tr("Uploading Image"));
+        SystemNotification().sendMessage(
+                QObject::tr("Saved to global clipboard"));
+        
+    }
 
-    m_vLayout = new QVBoxLayout();
-    setLayout(m_vLayout);
-    m_vLayout->addWidget(m_spinner, 0, Qt::AlignHCenter);
-    m_vLayout->addWidget(m_infoLabel);
-
-    m_NetworkAM = new QNetworkAccessManager(this);
-    connect(m_NetworkAM, &QNetworkAccessManager::finished, this,
-            &ImgurUploader::handleReply);
-
-    setAttribute(Qt::WA_DeleteOnClose);
-
-    upload();
-    // QTimer::singleShot(2000, this, &ImgurUploader::onUploadOk); // testing
+    // remove tmp file
+    char rm[100 + sizeof(tmp_file)];
+    snprintf(rm, sizeof(rm),"rm -f %s", tmp_file);
+    system(rm);
 }
 
 void ImgurUploader::handleReply(QNetworkReply *reply) {
