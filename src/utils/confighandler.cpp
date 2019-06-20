@@ -123,6 +123,22 @@ void ConfigHandler::setSavePath(const QString &savePath) {
     m_settings.setValue(QStringLiteral("savePath"), savePath);
 }
 
+QString ConfigHandler::getClipScript() {
+    return m_settings.value(QStringLiteral("clipScript")).toString();
+}
+
+void ConfigHandler::setClipScript(const QString &script) {
+    m_settings.setValue(QStringLiteral("clipScript"), script);
+}
+
+QString ConfigHandler::getUploadScript() {
+    return m_settings.value(QStringLiteral("uploadScript")).toString();
+}
+
+void ConfigHandler::setUploadScript(const QString &script) {
+    m_settings.setValue(QStringLiteral("uploadScript"), script);
+}
+
 QColor ConfigHandler::uiMainColorValue() {
     QColor res = QColor(116, 0, 150);
 

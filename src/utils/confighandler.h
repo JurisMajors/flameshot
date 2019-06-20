@@ -74,6 +74,12 @@ public:
     bool useXclipManagerValue();
     void setXclipManager(const bool);
 
+    QString getClipScript();
+    void setClipScript(const QString &);
+
+    QString getUploadScript();
+    void setUploadScript(const QString &);
+
     void setDefaults();
     void setAllTheButtons();
 

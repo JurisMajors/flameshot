@@ -19,6 +19,7 @@
 #include "src/utils/confighandler.h"
 #include "src/utils/confighandler.h"
 #include "src/core/controller.h"
+#include <iostream>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QCheckBox>

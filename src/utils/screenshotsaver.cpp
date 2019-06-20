@@ -19,6 +19,10 @@
 #include "src/utils/systemnotification.h"
 #include "src/utils/filenamehandler.h"
 #include "src/utils/confighandler.h"
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
 #include <QClipboard>
 #include <QApplication>
 #include <QMessageBox>
@@ -30,25 +34,27 @@ ScreenshotSaver::ScreenshotSaver() {
 
 bool useXclipClipboard(const QPixmap &capture) {
     // create tmp png file
-    char tmp_file[] = "/tmp/clip.XXXXXX.png";
-    mkstemps(tmp_file, 4);
-    bool success = capture.save(QString(tmp_file), 0, -1);
+    char tmp[] = "/tmp/clip.XXXXXX.png";
+    mkstemps(tmp, 4);
+    bool success = capture.save(QString(tmp), 0, -1);
+    std::string tmp_file(tmp);
 
     if (success) {
         // save tmp file to clipboard using xclip
-        char save[100 + sizeof(tmp_file)];
-        snprintf(save, sizeof(save),"cat %s | xclip -selection clipboard -target image/png -i", tmp_file);
-        system(save);
+        ConfigHandler config;
+        //char save[100 + sizeof(tmp_file)];
+        std::stringstream save;
+        save<< "cat " <<  tmp_file <<  " | " <<  config.getClipScript().toStdString();
+        system(save.str().c_str());
 
         SystemNotification().sendMessage(
                 QObject::tr("Saved to global clipboard"));
         
     }
-
     // remove tmp file
-    char rm[100 + sizeof(tmp_file)];
-    snprintf(rm, sizeof(rm),"rm -f %s", tmp_file);
-    system(rm);
+    std::stringstream rm;
+    rm << " rm -f " << tmp_file;
+    system(rm.str().c_str());
 
     return success;
 }

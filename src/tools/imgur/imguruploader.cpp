@@ -22,7 +22,10 @@
 #include "src/widgets/imagelabel.h"
 #include "src/widgets/notificationwidget.h"
 #include "src/utils/confighandler.h"
+#include <sstream>
 #include <iostream>
+#include <iomanip>
+#include <string>
 #include <QApplication>
 #include <QClipboard>
 #include <QDesktopServices>
@@ -45,29 +48,26 @@
 ImgurUploader::ImgurUploader(const QPixmap &capture, QWidget *parent) :
     QWidget(parent), m_pixmap(capture)
 {
-    std::cout<<"uploading"<<std::endl;
     // create tmp png file
-    char tmp_file[] = "/tmp/clip.XXXXXX.png";
-    mkstemps(tmp_file, 4);
-    bool success = capture.save(QString(tmp_file), 0, -1);
+    char tmp[] = "/tmp/clip.XXXXXX.png";
+    mkstemps(tmp, 4);
+    bool success = capture.save(QString(tmp), 0, -1);
+    std::string tmp_file(tmp);
 
     if (success) {
-        // save tmp file to clipboard using xclip
-        char save[100 + sizeof(tmp_file)];
-        char curl[] = "\"file=@\"";
-        snprintf(save, sizeof(save),"curl -F%s%s http://0x0.st | xclip -sel c", curl, tmp_file);
-        std::cout<<save<<std::endl;
-        system(save);
-
+        ConfigHandler config;
+        std::stringstream save;
+        save << config.getUploadScript().toStdString() << " " << tmp_file;
+        system(save.str().c_str());
         SystemNotification().sendMessage(
-                QObject::tr("Saved to global clipboard"));
+                QObject::tr("Uploaded done"));
         
     }
 
     // remove tmp file
-    char rm[100 + sizeof(tmp_file)];
-    snprintf(rm, sizeof(rm),"rm -f %s", tmp_file);
-    system(rm);
+    std::stringstream rm;
+    rm << " rm -f " << tmp_file;
+    system(rm.str().c_str());
 }
 
 void ImgurUploader::handleReply(QNetworkReply *reply) {
